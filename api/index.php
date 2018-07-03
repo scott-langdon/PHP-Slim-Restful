@@ -12,6 +12,8 @@ $app->post('/feed','feed'); /* User Feeds  */
 $app->post('/feedUpdate','feedUpdate'); /* User Feeds  */
 $app->post('/feedDelete','feedDelete'); /* User Feeds  */
 $app->post('/getImages', 'getImages');
+$app->post('/userImage','userImage'); /* User Details */
+$app->post('/getImages', 'getImages');
 
 
 $app->run();
@@ -36,19 +38,18 @@ function login() {
         $mainCount=$stmt->rowCount();
         $userData = $stmt->fetch(PDO::FETCH_OBJ);
         
-        if(!empty($userData))
-        {
+        if(!empty($userData)) {
             $user_id=$userData->user_id;
             $userData->token = apiToken($user_id);
         }
-        
+    
         $db = null;
-         if($userData){
-               $userData = json_encode($userData);
-                echo '{"userData": ' .$userData . '}';
-            } else {
-               echo '{"error":{"text":"Bad request wrong username and password"}}';
-            }
+        if($userData) {
+            $userData = json_encode($userData);
+            echo '{"userData": ' .$userData . '}';
+        } else {
+            echo '{"error":{"text":"Bad request wrong username and password"}}';
+        }
 
            
     }
@@ -73,11 +74,8 @@ function signup() {
         $email_check = preg_match('~^[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.([a-zA-Z]{2,4})$~i', $email);
         $password_check = preg_match('~^[A-Za-z0-9!@#$%^&*()_]{6,20}$~i', $password);
         
-        echo $email_check.'<br/>'.$email;
-        
         if (strlen(trim($username))>0 && strlen(trim($password))>0 && strlen(trim($email))>0 && $email_check>0 && $username_check>0 && $password_check>0)
         {
-            echo 'here';
             $db = getDB();
             $userData = '';
             $sql = "SELECT user_id FROM users WHERE username=:username or email=:email";
@@ -196,8 +194,6 @@ function internalUserDetails($input) {
 }
 
 function getFeed(){
-  
-   
     try {
          
         if(1){
@@ -237,7 +233,6 @@ function feed(){
     $systemToken=apiToken($user_id);
    
     try {
-         
         if($systemToken == $token){
             $feedData = '';
             $db = getDB();
@@ -246,8 +241,7 @@ function feed(){
                 $stmt = $db->prepare($sql);
                 $stmt->bindParam("user_id", $user_id, PDO::PARAM_INT);
                 $stmt->bindParam("lastCreated", $lastCreated, PDO::PARAM_STR);
-            }
-            else{
+            } else {
                 $sql = "SELECT * FROM feed WHERE user_id_fk=:user_id ORDER BY feed_id DESC LIMIT 5";
                 $stmt = $db->prepare($sql);
                 $stmt->bindParam("user_id", $user_id, PDO::PARAM_INT);
@@ -257,18 +251,18 @@ function feed(){
            
             $db = null;
 
-            if($feedData)
-            echo '{"feedData": ' . json_encode($feedData) . '}';
-            else
-            echo '{"feedData": ""}';
-        } else{
+            if($feedData) {
+                echo '{"feedData": ' . json_encode($feedData) . '}';
+            } else {
+                echo '{"feedData": ""}';
+            }
+        } else {
             echo '{"error":{"text":"No access"}}';
         }
        
     } catch(PDOException $e) {
         echo '{"error":{"text":'. $e->getMessage() .'}}';
     }
-
 }
 
 function feedUpdate(){
@@ -295,9 +289,7 @@ function feedUpdate(){
             $created = time();
             $stmt->bindParam("created", $created, PDO::PARAM_INT);
             $stmt->execute();
-            
-
-
+        
             $sql1 = "SELECT * FROM feed WHERE user_id_fk=:user_id ORDER BY feed_id DESC LIMIT 1";
             $stmt1 = $db->prepare($sql1);
             $stmt1->bindParam("user_id", $user_id, PDO::PARAM_INT);
@@ -316,8 +308,6 @@ function feedUpdate(){
     }
 
 }
-
-
 
 function feedDelete(){
     $request = \Slim\Slim::getInstance()->request();
@@ -351,7 +341,7 @@ function feedDelete(){
     }   
     
 }
-$app->post('/userImage','userImage'); /* User Details */
+
 function userImage(){
     $request = \Slim\Slim::getInstance()->request();
     $data = json_decode($request->getBody());
@@ -377,7 +367,6 @@ function userImage(){
     }
 }
 
-$app->post('/getImages', 'getImages');
 function getImages(){
     $request = \Slim\Slim::getInstance()->request();
     $data = json_decode($request->getBody());
